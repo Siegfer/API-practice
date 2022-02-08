@@ -1,7 +1,14 @@
 from fastapi import FastAPI, Path
 from typing import Optional
+from pydantic import BaseModel
 
 app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    price: float
+    brand: Optional[str] = None
 
 
 # GET
@@ -31,9 +38,17 @@ def get_item(
     return inventory[item_id]
 
 
-@app.get("/get-by-name")
+@app.get("/get-by-name/{item_id}")
 def get_item(*, name: Optional[str] = None, test: int):
     for item_id in inventory:
         if inventory[item_id]["name"] == name:
             return inventory[item_id]
     return {"Data": "Not found"}
+
+
+@app.post("/create-item/{item_id}")
+def create_item(item_id: int, item: Item):
+    if item_id in inventory:
+        return {"Error": "Item ID already exists."}
+
+    inventory[item_id] = {"name": item.name, "brand": item.brand, "price": item.price}
